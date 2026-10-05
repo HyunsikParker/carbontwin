@@ -14,12 +14,14 @@ import argparse
 import gzip
 import json
 import re
+import sys
 import time
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
-from adjudicate import record_text
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from adjudicate import record_text  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data"
@@ -33,11 +35,12 @@ SCHEMA = {
     "type": "object",
     "properties": {
         "same_asset": {"type": "string", "enum": ["yes", "no", "unclear"]},
-        "shared_facts": {"type": "array", "items": {"type": "object", "properties": {
-            "field": {"type": "string"}, "value_a": {"type": "string"}, "value_b": {"type": "string"}},
+        "shared_facts": {"type": "array", "maxItems": 5, "items": {"type": "object", "properties": {
+            "field": {"type": "string", "maxLength": 40}, "value_a": {"type": "string", "maxLength": 80},
+            "value_b": {"type": "string", "maxLength": 80}},
             "required": ["field", "value_a", "value_b"]}},
-        "differences": {"type": "array", "items": {"type": "string"}},
-        "reason": {"type": "string"},
+        "differences": {"type": "array", "maxItems": 4, "items": {"type": "string", "maxLength": 120}},
+        "reason": {"type": "string", "maxLength": 300},
     },
     "required": ["same_asset", "shared_facts", "differences", "reason"],
 }
@@ -62,7 +65,7 @@ def ask(api: str, prompt: str) -> dict:
         "model": "gemma-4-12b",
         "messages": [{"role": "system", "content": SYSTEM}, {"role": "user", "content": prompt}],
         "temperature": 0.0,
-        "max_tokens": 420,
+        "max_tokens": 700,
         "response_format": {"type": "json_object", "schema": SCHEMA},
     }
     req = urllib.request.Request(f"{api}/chat/completions", data=json.dumps(body).encode(),
@@ -90,14 +93,17 @@ def main() -> None:
 
     def work(v: dict) -> dict:
         a_text, b_text = record_text(projects[v["a"]]), record_text(projects[v["b"]])
-        prompt = (f"Listing A\n{a_text}\n\nListing B\n{b_text}\n\nList the facts present in both listings "
-                  "(field, value in A, value in B), the differences, whether they are the same physical asset "
-                  "(yes/no/unclear) and a one-sentence reason that only uses shared facts.")
+        prompt = (f"Listing A\n{a_text}\n\nListing B\n{b_text}\n\nList up to five facts present in both listings "
+                  "(field, value in A, value in B; values copied and kept short), up to four differences, whether they "
+                  "are the same physical asset (yes/no/unclear) and a one-sentence reason that only uses shared facts.")
         t0 = time.time()
-        try:
-            r = ask(args.api, prompt)
-        except Exception as exc:
-            r = {"same_asset": "unclear", "shared_facts": [], "differences": [], "reason": f"error: {exc}"[:200]}
+        r = None
+        for attempt in range(2):
+            try:
+                r = ask(args.api, prompt)
+                break
+            except Exception as exc:
+                r = {"same_asset": "unclear", "shared_facts": [], "differences": [], "reason": f"error: {exc}"[:200]}
         kept = [f for f in r.get("shared_facts", [])
                 if grounded(f.get("value_a", ""), a_text) and grounded(f.get("value_b", ""), b_text)]
         dropped = len(r.get("shared_facts", [])) - len(kept)

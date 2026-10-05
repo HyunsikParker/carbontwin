@@ -19,6 +19,7 @@ async function main() {
   $("#pair-filter").addEventListener("change", renderTable);
   $("#source").textContent = `${doc.summary.source}. Adjudicator: ${doc.summary.adjudicator}.`;
   $("#root").textContent = `Report Merkle root: ${doc.summary.merkle_root}  ·  leaf = ${doc.summary.leaf_encoding}`;
+  renderPairs();
   renderTable();
   const first = visible()[0];
   if (first) select(first);
@@ -40,6 +41,20 @@ function renderStats(s) {
   $("#stats").innerHTML = items.map(([b, t, hot]) => `<div class="stat${hot ? " hot" : ""}"><b>${b}</b><span>${t}</span></div>`).join("");
 }
 
+function renderPairs() {
+  const agg = new Map();
+  for (const f of doc.findings.filter((x) => x.overlap_vintages.length)) {
+    const k = pairLabel(f);
+    const a = agg.get(k) || { n: 0, vol: 0 };
+    a.n += 1; a.vol += f.overlap_volume; agg.set(k, a);
+  }
+  const rows = [...agg.entries()].sort((x, y) => y[1].vol - x[1].vol);
+  $("#pairs").innerHTML = rows.map(([k, a]) => `<button class="pairchip" data-pair="${esc(k)}"><b>${esc(k)}</b> ${a.n} pair${a.n > 1 ? "s" : ""} · ${fmt(a.vol)} t</button>`).join("");
+  for (const b of document.querySelectorAll(".pairchip")) {
+    b.addEventListener("click", () => { $("#pair-filter").value = b.dataset.pair; renderTable(); });
+  }
+}
+
 function visible() {
   const only = $("#only-overlap").checked;
   const pair = $("#pair-filter").value;
@@ -56,7 +71,7 @@ function renderTable() {
       <td>${esc(f.country)}</td>
       <td>${f.overlap_vintages.join(", ") || "—"}</td>
       <td class="num">${fmt(f.overlap_volume)}</td>
-      <td><span class="yes">same asset</span> <span class="small">${(f.shared_facts || []).length} checked facts</span></td>
+      <td class="verdict"><span class="yes">same asset</span><span class="small">${(f.shared_facts || []).length} facts checked</span></td>
       <td><button class="link">Details</button></td>
     </tr>`)
     .join("");

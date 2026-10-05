@@ -114,3 +114,11 @@ button.link { background: none; border: 0; color: var(--accent); cursor: pointer
 
 tr.row:focus-visible td { outline: 2px solid var(--accent); outline-offset: -2px; }
 button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.pairs { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 12px; }
+.pairchip { font: inherit; font-size: 13px; border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 4px 12px; cursor: pointer; color: var(--muted); }
+.pairchip b { color: var(--ink); font-weight: 600; margin-right: 4px; }
+.pairchip:hover { border-color: var(--accent); }
+
+td.verdict span { display: block; white-space: nowrap; }
+.demo-steps button.done:disabled { opacity: 1; cursor: default; }

@@ -29,6 +29,9 @@ for (const [file, contracts] of Object.entries(output.contracts)) {
   for (const [name, c] of Object.entries(contracts)) {
     const artifact = { contractName: name, sourceName: file, compiler: solc.version(), abi: c.abi, bytecode: "0x" + c.evm.bytecode.object };
     fs.writeFileSync(path.join(outDir, `${name}.json`), JSON.stringify(artifact, null, 1));
+    const webDir = path.join(here, "..", "web", "public", "contract");
+    fs.mkdirSync(webDir, { recursive: true });
+    fs.writeFileSync(path.join(webDir, `${name}.json`), JSON.stringify(artifact, null, 1));
     console.log(`${name}: ${c.evm.bytecode.object.length / 2} bytes, ${c.abi.length} ABI entries`);
   }
 }

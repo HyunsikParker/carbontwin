@@ -40,6 +40,7 @@
           <select id="pair-filter" aria-label="Registry pair"><option value="">All registry pairs</option></select>
         </div>
       </div>
+      <div id="pairs" class="pairs" aria-label="Findings by registry pair"></div>
       <p class="note">A finding means the adjudicator judged both listings to be the same asset and both registries issued credits for at least one common vintage. Registry transfers can legitimately split a vintage, so each finding is a reconciliation question for the registries, not a verdict of double counting.</p>
       <div class="table-wrap">
         <table id="table">
@@ -76,7 +77,7 @@
         </div>
         <div>
           <h3>Matching and adjudication</h3>
-          <p>Pairs are candidates when names are similar within the same country (character n-gram TF-IDF, cosine ≥ 0.62). The model sees name, developer, site, type, methodology, status, vintage profile, notes and description for both listings. Phases, different capacities and different sites are told to count as different assets.</p>
+          <p>Pairs are candidates when names are similar within the same country (character n-gram TF-IDF, cosine ≥ 0.62). Every pair with a shared vintage, plus the highest-scoring others, went to the model, which sees name, developer, site, type, methodology, status, vintage profile, notes and description for both listings. It is told that phases, different capacities and different sites mean different assets. A second pass must list facts present in both records; code drops any it cannot find.</p>
         </div>
         <div>
           <h3>What the contract adds</h3>
@@ -84,6 +85,7 @@
         </div>
       </div>
       <p id="root" class="mono small"></p>
+      <p class="small"><a href="./data/findings.json" download>Download the full report (findings.json)</a> · <a href="https://github.com/HyunsikParker/carbontwin/blob/main/contracts/src/CreditClaimRegistry.sol">Contract source</a></p>
     </section>
   </main>
 
