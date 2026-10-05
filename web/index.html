@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CarbonTwin — cross-registry double-issuance screening</title>
+  <meta name="description" content="Finds carbon credit projects listed in two registries that issued the same vintages, and shows a smart contract that refuses the second issuance." />
+  <link rel="stylesheet" href="./src/style.css" />
+</head>
+<body>
+  <header class="top">
+    <div class="wrap">
+      <div class="brand"><span class="mark" aria-hidden="true"></span>CarbonTwin</div>
+      <nav><a href="#findings">Findings</a><a href="#contract">Contract demo</a><a href="#method">Method</a><a href="https://github.com/HyunsikParker/carbontwin">Source</a></nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero wrap">
+      <p class="eyebrow">Track: Carbon Markets &amp; Emissions Transparency</p>
+      <h1>One project, two registries, the same vintage issued twice?</h1>
+      <p class="lede">CarbonTwin screens every listing in Berkeley's database of the major voluntary carbon registries, asks an open-weight model running locally whether two listings describe the same physical asset, and records the answer in a smart contract that refuses a second registry's issuance for a vintage that was already issued.</p>
+      <div class="stats" id="stats" aria-live="polite"></div>
+    </section>
+
+    <section class="wrap steps" aria-label="Pipeline">
+      <ol>
+        <li><b>Screen</b><span>TF-IDF name matching, developer, site and type checks across <em id="s-projects">…</em> listings</span></li>
+        <li><b>Adjudicate</b><span>Gemma 4 12B, run locally at temperature 0, reads both records and returns a JSON verdict with a reason</span></li>
+        <li><b>Anchor</b><span>Each finding is hashed into a Merkle tree; the root is stored on-chain</span></li>
+        <li><b>Enforce</b><span>Linked listings share one asset key, so a second registry cannot issue the same vintage</span></li>
+      </ol>
+    </section>
+
+    <section id="findings" class="wrap">
+      <div class="section-head">
+        <h2>Findings</h2>
+        <div class="controls">
+          <label><input type="checkbox" id="only-overlap" checked /> Only overlapping vintages</label>
+          <select id="pair-filter" aria-label="Registry pair"><option value="">All registry pairs</option></select>
+        </div>
+      </div>
+      <p class="note">A finding means the adjudicator judged both listings to be the same asset and both registries issued credits for at least one common vintage. Registry transfers can legitimately split a vintage, so each finding is a reconciliation question for the registries, not a verdict of double counting.</p>
+      <div class="table-wrap">
+        <table id="table">
+          <thead><tr><th>Listings</th><th>Country</th><th>Overlapping vintages</th><th class="num">Overlap (tCO₂e)</th><th>Model verdict</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div id="detail" class="detail" hidden></div>
+    </section>
+
+    <section id="contract" class="wrap">
+      <div class="section-head"><h2>Contract demo</h2><span class="pill">runs an EVM in your browser — no wallet, no network</span></div>
+      <p class="note">Replays the selected finding through <code>CreditClaimRegistry.sol</code>: each registry records its real issuances, the auditor links the two listings, the contract reports the overlapping vintages, and a new issuance for a linked vintage is refused.</p>
+      <div class="demo">
+        <div class="demo-steps">
+          <p class="selected" id="demo-target">Selected: —</p>
+          <button id="b-deploy">1 · Deploy registry</button>
+          <button id="b-replay" disabled>2 · Record both registries' issuances</button>
+          <button id="b-link" disabled>3 · Link listings as one asset</button>
+          <button id="b-double" disabled>4 · Try one more issuance</button>
+          <button id="b-anchor" disabled>5 · Anchor report and verify this finding</button>
+        </div>
+        <pre id="log" class="log" aria-live="polite">Pick a finding, then deploy.</pre>
+      </div>
+    </section>
+
+    <section id="method" class="wrap method">
+      <h2>Method and limits</h2>
+      <div class="cols">
+        <div>
+          <h3>Data</h3>
+          <p id="source"></p>
+          <p>Vintage issuance per listing comes from the registries' public records as compiled by Berkeley. Serial numbers are not in the summary data, so overlap is measured per vintage, using the smaller of the two issuances.</p>
+        </div>
+        <div>
+          <h3>Matching and adjudication</h3>
+          <p>Pairs are candidates when names are similar within the same country (character n-gram TF-IDF, cosine ≥ 0.62). The model sees name, developer, site, type, methodology, status, vintage profile, notes and description for both listings. Phases, different capacities and different sites are told to count as different assets.</p>
+        </div>
+        <div>
+          <h3>What the contract adds</h3>
+          <p>Registries keep their own systems. They post issuance claims keyed by listing and vintage. Once an auditor links two listings, they share an asset key: past overlaps become events anyone can see, and future overlaps revert with <code>DoubleIssuance</code>.</p>
+        </div>
+      </div>
+      <p id="root" class="mono small"></p>
+    </section>
+  </main>
+
+  <footer class="wrap foot">
+    Data: Berkeley Carbon Trading Project, Voluntary Registry Offsets Database v2026-06, CC BY 4.0. Code: MIT. Built for the IEEE ClimateChain Global Hackathon 2026.
+  </footer>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
