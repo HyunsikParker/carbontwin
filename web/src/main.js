@@ -55,7 +55,7 @@ function mirrorChart(f, { W = 720, H = 230, dark = false } = {}) {
   for (let y = years[0]; y <= years[years.length - 1]; y++) span.push(y);
   const max = Math.max(...span.map((y) => Math.max(a[y] || 0, b[y] || 0)), 1);
   const mid = H / 2, axis = 11, half = mid - axis - 6, bw = W / span.length, gap = Math.max(5, bw * 0.24);
-  const shade = dark ? `fill="rgba(239,106,67,0.13)" stroke="rgba(255,150,118,0.6)" stroke-dasharray="4 3"` : `fill="#fde8df"`;
+  const shade = dark ? `fill="rgba(239,106,67,0.13)" stroke="rgba(255,150,118,0.6)" stroke-dasharray="4 3"` : `fill="#fde8df" stroke="#d9552e" stroke-dasharray="4 3"`;
   const label = dark ? "#8fb0a5" : "#5b6c65";
   let svg = "";
   span.forEach((y, i) => {
@@ -113,7 +113,7 @@ function renderTable() {
           <span class="lname">${esc(f.listing_a["Project Name"])}</span></td>
       <td>${esc(f.country)}</td>
       <td>${f.overlap_vintages.map((y) => `<span class="vint">${y}</span>`).join("") || "—"}</td>
-      <td class="num"><div class="ov"><span class="ov-track"><i style="width:${Math.max(4, 100 * Math.sqrt(f.overlap_volume / top)).toFixed(1)}%"></i></span>${fmt(f.overlap_volume)}</div></td>
+      <td class="num"><div class="ov"><span class="ov-track"><i style="width:${Math.max(3, (100 * f.overlap_volume) / top).toFixed(1)}%"></i></span>${fmt(f.overlap_volume)}</div></td>
       <td class="verdict"><span class="yes">same asset</span><span class="small">${(f.shared_facts || []).length} facts checked</span></td>
       <td><button class="link">Details</button></td>
     </tr>`)
@@ -152,7 +152,7 @@ function chart(f) {
   const svg = mirrorChart(f, { W: 1060, H: 220 });
   if (!svg) return "";
   return `<div class="chart">${svg}
-    <div class="legend"><span><i style="background:${colorOf(f.registry_a)}"></i>${esc(f.a)} (above the axis)</span><span><i style="background:${colorOf(f.registry_b)}"></i>${esc(f.b)} (below)</span><span><i style="background:#fde8df"></i>vintage issued by both</span></div></div>`;
+    <div class="legend"><span><i style="background:${colorOf(f.registry_a)}"></i>${esc(f.a)} (above the axis)</span><span><i style="background:${colorOf(f.registry_b)}"></i>${esc(f.b)} (below)</span><span><i style="background:#fde8df;border:1px dashed #d9552e"></i>vintage issued by both</span></div></div>`;
 }
 
 function facts(f) {

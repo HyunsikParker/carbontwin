@@ -19,6 +19,12 @@
   --car: #9b6ad6;
   --acr: #3fae6a;
   --other: #8a9590;
+  /* Darker registry tones for labels with white text (4.6:1); the chart bars keep the brighter tones. */
+  --gold-chip: #936f25;
+  --vcs-chip: #3776bf;
+  --car-chip: #8c5fc1;
+  --acr-chip: #308451;
+  --other-chip: #6e7773;
   --display: "Space Grotesk", "Inter", system-ui, sans-serif;
   --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
@@ -124,7 +130,7 @@ tr.row:hover td { background: #f6faf8; }
 tr.row.active td { background: var(--accent-soft); }
 tr.row.active td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
 .chip { display: inline-block; margin-right: 6px; padding: 2px 7px; border-radius: 6px; color: #fff; font: 600 11px/1.5 var(--mono); vertical-align: 1px; }
-.chip.VCS { background: var(--vcs); } .chip.GOLD { background: var(--gold); } .chip.CAR { background: var(--car); } .chip.ACR { background: var(--acr); } .chip.ISO, .chip.ART { background: var(--other); }
+.chip.VCS { background: var(--vcs-chip); } .chip.GOLD { background: var(--gold-chip); } .chip.CAR { background: var(--car-chip); } .chip.ACR { background: var(--acr-chip); } .chip.ISO, .chip.ART { background: var(--other-chip); }
 .lname { display: block; max-width: 380px; margin-top: 5px; overflow: hidden; color: var(--muted); font-size: 13px; white-space: nowrap; text-overflow: ellipsis; }
 .vint { display: inline-block; margin: 2px 4px 2px 0; padding: 1px 7px; border-radius: 6px; background: var(--coral-soft); color: var(--coral-ink); font: 500 12px/1.6 var(--mono); }
 .ov { display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
@@ -202,4 +208,10 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outlin
   nav a:not(:last-child) { display: none; }
   .twin-foot { flex-direction: column; align-items: flex-start; }
   .stamp { text-align: left; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .btn, tr.row, .demo-steps button { transition: none; }
+  .btn:hover { transform: none; }
 }
