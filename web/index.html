@@ -5,38 +5,47 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>CarbonTwin — cross-registry double-issuance screening</title>
   <meta name="description" content="Finds carbon credit projects listed in two registries that issued the same vintages, and shows a smart contract that refuses the second issuance." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" />
   <link rel="stylesheet" href="./src/style.css" />
 </head>
 <body>
   <header class="top">
     <div class="wrap">
-      <div class="brand"><span class="mark" aria-hidden="true"></span>CarbonTwin</div>
+      <a class="brand" href="#"><span class="mark" aria-hidden="true"><i></i><i></i></span>CarbonTwin</a>
       <nav><a href="#findings">Findings</a><a href="#contract">Contract demo</a><a href="#method">Method</a><a href="media/carbontwin-demo.mp4">Video</a><a href="https://github.com/HyunsikParker/carbontwin">Source</a></nav>
     </div>
   </header>
 
   <main>
-    <section class="hero wrap">
-      <p class="eyebrow">Track: Carbon Markets &amp; Emissions Transparency</p>
-      <h1>One project, two registries, the same vintage issued twice?</h1>
-      <p class="lede">CarbonTwin screens every listing in Berkeley's database of the major voluntary carbon registries, asks an open-weight model running locally whether two listings describe the same physical asset, and records the answer in a smart contract that refuses a second registry's issuance for a vintage that was already issued.</p>
-      <div class="stats" id="stats" aria-live="polite"></div>
+    <section class="hero">
+      <div class="wrap hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">Track · Carbon Markets &amp; Emissions Transparency</p>
+          <h1>One project, two registries, <span class="hl">the same vintage issued twice?</span></h1>
+          <p class="lede">CarbonTwin screens every listing in Berkeley's database of the major voluntary carbon registries, asks an open-weight model running locally whether two listings describe the same physical asset, and records the answer in a smart contract that refuses a second registry's issuance for a vintage that was already issued.</p>
+          <div class="cta"><a class="btn primary" href="#findings">See the findings</a><a class="btn ghost" href="#contract">Run the contract demo</a></div>
+        </div>
+        <figure class="twin" id="hero-twin" aria-label="Largest finding"></figure>
+      </div>
+      <div class="wrap"><div class="stats" id="stats" aria-live="polite"></div></div>
     </section>
 
     <section class="wrap steps" aria-label="Pipeline">
       <ol>
-        <li><b>Screen</b><span>TF-IDF name matching, developer, site and type checks across <em id="s-projects">…</em> listings</span></li>
-        <li><b>Adjudicate</b><span>Gemma 4 12B, run locally at temperature 0, reads both records and returns a JSON verdict with a reason</span></li>
-        <li><b>Anchor</b><span>Each finding is hashed into a Merkle tree; the root is stored on-chain</span></li>
-        <li><b>Enforce</b><span>Linked listings share one asset key, so a second registry cannot issue the same vintage</span></li>
+        <li><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5"/></svg></span><b>Screen</b><span>TF-IDF name matching, developer, site and type checks across <em id="s-projects">…</em> listings</span></li>
+        <li><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="3"/><path d="M8 10h8M8 14h5"/></svg></span><b>Adjudicate</b><span>Gemma 4 12B, run locally at temperature 0, reads both records and returns a JSON verdict with a reason</span></li>
+        <li><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="5.5" r="2.5"/><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M12 8v4M12 12l-5 4M12 12l5 4"/></svg></span><b>Anchor</b><span>Each finding is hashed into a Merkle tree; the root is stored on-chain</span></li>
+        <li><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg></span><b>Enforce</b><span>Linked listings share one asset key, so a second registry cannot issue the same vintage</span></li>
       </ol>
     </section>
 
-    <section id="findings" class="wrap">
+    <section id="findings" class="wrap block">
       <div class="section-head">
-        <h2>Findings</h2>
+        <div><p class="kicker">Results</p><h2>Findings</h2></div>
         <div class="controls">
-          <label><input type="checkbox" id="only-overlap" checked /> Only overlapping vintages</label>
+          <label class="check"><input type="checkbox" id="only-overlap" checked /> Only overlapping vintages</label>
           <select id="pair-filter" aria-label="Registry pair"><option value="">All registry pairs</option></select>
         </div>
       </div>
@@ -51,23 +60,29 @@
       <div id="detail" class="detail" hidden></div>
     </section>
 
-    <section id="contract" class="wrap">
-      <div class="section-head"><h2>Contract demo</h2><span class="pill">runs an EVM in your browser — no wallet, no network</span></div>
-      <p class="note">Replays the selected finding through <code>CreditClaimRegistry.sol</code>: each registry records its real issuances, the auditor links the two listings, the contract reports the overlapping vintages, and a new issuance for a linked vintage is refused.</p>
-      <div class="demo">
-        <div class="demo-steps">
-          <p class="selected" id="demo-target">Selected: —</p>
-          <button id="b-deploy">1 · Deploy registry</button>
-          <button id="b-replay" disabled>2 · Record both registries' issuances</button>
-          <button id="b-link" disabled>3 · Link listings as one asset</button>
-          <button id="b-double" disabled>4 · Try one more issuance</button>
-          <button id="b-anchor" disabled>5 · Anchor report and verify this finding</button>
+    <section id="contract" class="band">
+      <div class="wrap">
+        <div class="section-head">
+          <div><p class="kicker">On-chain</p><h2>Contract demo</h2></div>
+          <span class="pill">runs an EVM in your browser — no wallet, no network</span>
         </div>
-        <pre id="log" class="log" aria-live="polite">Pick a finding, then deploy.</pre>
+        <p class="note">Replays the selected finding through <code>CreditClaimRegistry.sol</code>: each registry records its real issuances, the auditor links the two listings, the contract reports the overlapping vintages, and a new issuance for a linked vintage is refused.</p>
+        <div class="demo">
+          <div class="demo-steps">
+            <p class="selected" id="demo-target">Selected: —</p>
+            <button id="b-deploy"><span class="n">1</span><span>Deploy registry</span></button>
+            <button id="b-replay" disabled><span class="n">2</span><span>Record both registries' issuances</span></button>
+            <button id="b-link" disabled><span class="n">3</span><span>Link listings as one asset</span></button>
+            <button id="b-double" disabled><span class="n">4</span><span>Try one more issuance</span></button>
+            <button id="b-anchor" disabled><span class="n">5</span><span>Anchor report and verify this finding</span></button>
+          </div>
+          <pre id="log" class="log" aria-live="polite">Pick a finding, then deploy.</pre>
+        </div>
       </div>
     </section>
 
-    <section id="method" class="wrap method">
+    <section id="method" class="wrap block method">
+      <p class="kicker">How it works</p>
       <h2>Method and limits</h2>
       <div class="cols">
         <div>
@@ -89,8 +104,8 @@
     </section>
   </main>
 
-  <footer class="wrap foot">
-    Data: Berkeley Carbon Trading Project, Voluntary Registry Offsets Database v2026-06, CC BY 4.0. Code: MIT. Built for the IEEE ClimateChain Global Hackathon 2026.
+  <footer class="foot">
+    <div class="wrap">Data: Berkeley Carbon Trading Project, Voluntary Registry Offsets Database v2026-06, CC BY 4.0. Code: MIT. Built for the IEEE ClimateChain Global Hackathon 2026.</div>
   </footer>
   <script type="module" src="./src/main.js"></script>
 </body>

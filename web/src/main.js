@@ -4,6 +4,8 @@ import { leafOf, rootFromProof } from "../../contracts/leaf.mjs";
 
 const $ = (sel) => document.querySelector(sel);
 const fmt = (n) => Number(n).toLocaleString("en-US");
+// Model strings that hit the schema length cap in pipeline/verify.py were cut there; mark the cut.
+const capped = (s, n) => esc(s) + (String(s ?? "").length >= n ? "…" : "");
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const REG_NAME = { VCS: "Verra (VCS)", GOLD: "Gold Standard", CAR: "Climate Action Reserve", ACR: "ACR", ISO: "Isometric", ART: "ART" };
 
@@ -21,6 +23,7 @@ async function main() {
   $("#root").textContent = `Report Merkle root: ${doc.summary.merkle_root}  ·  leaf = ${doc.summary.leaf_encoding}`;
   renderPairs();
   renderTable();
+  renderHero([...doc.findings].sort((x, y) => y.overlap_volume - x.overlap_volume)[0]);
   const first = visible()[0];
   if (first) select(first);
   wireDemo();
@@ -39,6 +42,45 @@ function renderStats(s) {
     [`${(s.overlap_volume / 1e6).toFixed(2)} M`, "tCO₂e issued for those shared vintages (smaller side)", true],
   ];
   $("#stats").innerHTML = items.map(([b, t, hot]) => `<div class="stat${hot ? " hot" : ""}"><b>${b}</b><span>${t}</span></div>`).join("");
+}
+
+const colorOf = (r) => getComputedStyle(document.documentElement).getPropertyValue(`--${r === "GOLD" ? "gold" : r.toLowerCase()}`).trim() || "#8a9590";
+
+// Mirrored vintage chart: listing A grows up from the year axis, listing B grows down.
+function mirrorChart(f, { W = 720, H = 230, dark = false } = {}) {
+  const a = f.listing_a.issued_by_vintage, b = f.listing_b.issued_by_vintage;
+  const years = [...new Set([...Object.keys(a), ...Object.keys(b)])].map(Number).sort((x, y) => x - y);
+  if (!years.length) return "";
+  const span = [];
+  for (let y = years[0]; y <= years[years.length - 1]; y++) span.push(y);
+  const max = Math.max(...span.map((y) => Math.max(a[y] || 0, b[y] || 0)), 1);
+  const mid = H / 2, axis = 11, half = mid - axis - 6, bw = W / span.length, gap = Math.max(5, bw * 0.24);
+  const shade = dark ? `fill="rgba(239,106,67,0.13)" stroke="rgba(255,150,118,0.6)" stroke-dasharray="4 3"` : `fill="#fde8df"`;
+  const label = dark ? "#8fb0a5" : "#5b6c65";
+  let svg = "";
+  span.forEach((y, i) => {
+    const x = i * bw;
+    if (f.overlap_vintages.includes(y)) svg += `<rect x="${(x + 1).toFixed(1)}" y="2" width="${(bw - 2).toFixed(1)}" height="${H - 4}" rx="7" ${shade}/>`;
+    const ha = ((a[y] || 0) / max) * half, hb = ((b[y] || 0) / max) * half;
+    if (ha) svg += `<rect x="${(x + gap / 2).toFixed(1)}" y="${(mid - axis - ha).toFixed(1)}" width="${(bw - gap).toFixed(1)}" height="${ha.toFixed(1)}" rx="3" fill="${colorOf(f.registry_a)}"><title>${esc(f.a)} ${y}: ${fmt(a[y])}</title></rect>`;
+    if (hb) svg += `<rect x="${(x + gap / 2).toFixed(1)}" y="${(mid + axis).toFixed(1)}" width="${(bw - gap).toFixed(1)}" height="${hb.toFixed(1)}" rx="3" fill="${colorOf(f.registry_b)}"><title>${esc(f.b)} ${y}: ${fmt(b[y])}</title></rect>`;
+    svg += `<text x="${(x + bw / 2).toFixed(1)}" y="${mid + 4}" font-size="11" font-family="JetBrains Mono, monospace" text-anchor="middle" fill="${label}">'${String(y).slice(2)}</text>`;
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Credits issued by vintage: ${esc(f.a)} above the axis, ${esc(f.b)} below">${svg}</svg>`;
+}
+
+function renderHero(f) {
+  if (!f) return;
+  const L = (x) => x["Project Name"];
+  $("#hero-twin").innerHTML = `
+    <div class="twin-head"><span>Largest finding</span><span>${esc(f.country)}</span></div>
+    <div class="twin-row"><span class="chip ${f.registry_a}">${esc(f.a)}</span><span class="nm">${esc(L(f.listing_a))}</span><span class="rg">${esc(REG_NAME[f.registry_a] ?? f.registry_a)}</span></div>
+    ${mirrorChart(f, { W: 520, H: 200, dark: true })}
+    <div class="twin-row"><span class="chip ${f.registry_b}">${esc(f.b)}</span><span class="nm">${esc(L(f.listing_b))}</span><span class="rg">${esc(REG_NAME[f.registry_b] ?? f.registry_b)}</span></div>
+    <div class="twin-foot">
+      <div><b>${fmt(f.overlap_volume)} t</b><small>issued by both for ${f.overlap_vintages.join(", ")}</small></div>
+      <div class="stamp">after linking: new ${f.overlap_vintages[f.overlap_vintages.length - 1]} issuance<br>reverts DoubleIssuance</div>
+    </div>`;
 }
 
 function renderPairs() {
@@ -63,14 +105,15 @@ function visible() {
 
 function renderTable() {
   const rows = visible();
+  const top = Math.max(...doc.findings.map((f) => f.overlap_volume), 1);
   $("#table tbody").innerHTML = rows
     .map((f, i) => `
     <tr class="row${selected === f ? " active" : ""}" data-i="${doc.findings.indexOf(f)}" tabindex="0" aria-label="${esc(f.a)} and ${esc(f.b)}">
       <td><span class="chip ${f.registry_a}">${esc(f.a)}</span><span class="chip ${f.registry_b}">${esc(f.b)}</span>
           <span class="lname">${esc(f.listing_a["Project Name"])}</span></td>
       <td>${esc(f.country)}</td>
-      <td>${f.overlap_vintages.join(", ") || "—"}</td>
-      <td class="num">${fmt(f.overlap_volume)}</td>
+      <td>${f.overlap_vintages.map((y) => `<span class="vint">${y}</span>`).join("") || "—"}</td>
+      <td class="num"><div class="ov"><span class="ov-track"><i style="width:${Math.max(4, 100 * Math.sqrt(f.overlap_volume / top)).toFixed(1)}%"></i></span>${fmt(f.overlap_volume)}</div></td>
       <td class="verdict"><span class="yes">same asset</span><span class="small">${(f.shared_facts || []).length} facts checked</span></td>
       <td><button class="link">Details</button></td>
     </tr>`)
@@ -106,35 +149,17 @@ function card(L) {
 }
 
 function chart(f) {
-  const a = f.listing_a.issued_by_vintage, b = f.listing_b.issued_by_vintage;
-  const years = [...new Set([...Object.keys(a), ...Object.keys(b)])].map(Number).sort();
-  if (!years.length) return "";
-  const lo = years[0], hi = years[years.length - 1];
-  const span = [];
-  for (let y = lo; y <= hi; y++) span.push(y);
-  const max = Math.max(...span.map((y) => Math.max(a[y] || 0, b[y] || 0)), 1);
-  const W = 720, H = 170, pad = 28, bw = (W - pad * 2) / span.length;
-  const bar = (y, v, i, side, color) => {
-    const h = ((v || 0) / max) * (H - 50);
-    const x = pad + i * bw + (side ? bw / 2 : 4);
-    return `<rect x="${x.toFixed(1)}" y="${(H - 26 - h).toFixed(1)}" width="${(bw / 2 - 4).toFixed(1)}" height="${h.toFixed(1)}" fill="${color}"><title>${y}: ${fmt(v || 0)}</title></rect>`;
-  };
-  const colorOf = (r) => getComputedStyle(document.documentElement).getPropertyValue(`--${r === "GOLD" ? "gold" : r.toLowerCase()}`).trim() || "#888";
-  let svg = "";
-  span.forEach((y, i) => {
-    if (f.overlap_vintages.includes(y)) svg += `<rect x="${(pad + i * bw).toFixed(1)}" y="8" width="${bw.toFixed(1)}" height="${H - 34}" fill="#f6e4dc"/>`;
-    svg += bar(y, a[y], i, 0, colorOf(f.registry_a)) + bar(y, b[y], i, 1, colorOf(f.registry_b));
-    svg += `<text x="${(pad + i * bw + bw / 2).toFixed(1)}" y="${H - 8}" font-size="10" text-anchor="middle" fill="#5b6661">${String(y).slice(2)}</text>`;
-  });
-  return `<div class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Credits issued by vintage for both listings">${svg}</svg>
-    <div class="legend"><span><i style="background:${colorOf(f.registry_a)}"></i>${esc(f.a)}</span><span><i style="background:${colorOf(f.registry_b)}"></i>${esc(f.b)}</span><span><i style="background:#f6e4dc"></i>vintage issued by both</span></div></div>`;
+  const svg = mirrorChart(f, { W: 1060, H: 220 });
+  if (!svg) return "";
+  return `<div class="chart">${svg}
+    <div class="legend"><span><i style="background:${colorOf(f.registry_a)}"></i>${esc(f.a)} (above the axis)</span><span><i style="background:${colorOf(f.registry_b)}"></i>${esc(f.b)} (below)</span><span><i style="background:#fde8df"></i>vintage issued by both</span></div></div>`;
 }
 
 function facts(f) {
-  const rows = (f.shared_facts || []).map((x) => `<tr><td>${esc(x.field)}</td><td>${esc(x.value_a)}</td><td>${esc(x.value_b)}</td></tr>`).join("");
+  const rows = (f.shared_facts || []).map((x) => `<tr><td>${esc(x.field)}</td><td>${capped(x.value_a, 80)}</td><td>${capped(x.value_b, 80)}</td></tr>`).join("");
   const diffs = (f.differences || []).filter(Boolean);
-  return `<table class="facts"><thead><tr><th>Shared fact (found in both records)</th><th>${esc(f.a)}</th><th>${esc(f.b)}</th></tr></thead><tbody>${rows}</tbody></table>
-    ${diffs.length ? `<p class="diffs"><b>Differences the model noted:</b> ${diffs.map(esc).join("; ")}</p>` : ""}`;
+  return `<div class="facts-wrap"><table class="facts"><thead><tr><th>Shared fact (found in both records)</th><th>${esc(f.a)}</th><th>${esc(f.b)}</th></tr></thead><tbody>${rows}</tbody></table></div>
+    ${diffs.length ? `<p class="diffs"><b>Differences the model noted:</b> ${diffs.map((d) => capped(d, 120)).join("; ")}</p>` : ""}`;
 }
 
 function renderDetail(f) {
@@ -143,7 +168,7 @@ function renderDetail(f) {
   el.innerHTML = `
     <h3>${esc(f.a)} and ${esc(f.b)}</h3>
     ${chart(f)}
-    <div class="reason"><b>Model verdict:</b> same asset in both passes${f.transfer_mentioned ? " · a registry transfer is mentioned" : ""}<br>${esc(f.reason)}</div>
+    <div class="reason"><b>Model verdict:</b> same asset in both passes${f.transfer_mentioned ? " · a registry transfer is mentioned" : ""}<br>${capped(f.reason, 300)}</div>
     ${facts(f)}
     <div class="pair">${card(f.listing_a)}${card(f.listing_b)}</div>
     <div class="verify"><button class="link" id="verify-btn">Check this finding against the report root</button><span id="verify-out"></span></div>`;
@@ -158,7 +183,15 @@ function renderDetail(f) {
 
 // ---------------- contract demo ----------------
 let chain = null, reg = null, artifact = null;
-const log = (line) => { const el = $("#log"); el.textContent += `\n${line}`; el.scrollTop = el.scrollHeight; };
+// Colour each log line by what it reports: reverts and rejections, events, successful checks.
+function paint(line) {
+  if (/REVERT|= false$|unexpected/.test(line)) return `<span class="err">${esc(line)}</span>`;
+  if (/event |shared vintage/.test(line)) return `<span class="evt">${esc(line)}</span>`;
+  if (/= true$/.test(line)) return `<span class="okv">${esc(line)}</span>`;
+  if (/ {2}ok$/.test(line)) return `${esc(line.slice(0, -2))}<span class="okv">ok</span>`;
+  return esc(line);
+}
+const log = (line) => { const el = $("#log"); el.insertAdjacentHTML("beforeend", `\n${paint(line)}`); el.scrollTop = el.scrollHeight; };
 const btn = (id, on) => { $(id).disabled = !on; };
 const done = (id) => $(id).classList.add("done");
 
@@ -166,7 +199,7 @@ function resetDemo() {
   chain = null; reg = null;
   for (const id of ["#b-deploy", "#b-replay", "#b-link", "#b-double", "#b-anchor"]) $(id).classList.remove("done");
   btn("#b-deploy", true); btn("#b-replay", false); btn("#b-link", false); btn("#b-double", false); btn("#b-anchor", false);
-  $("#log").textContent = "Ready. Step 1 deploys CreditClaimRegistry into an in-browser EVM (Cancun).";
+  $("#log").innerHTML = `<span class="dim">Ready. Step 1 deploys CreditClaimRegistry into an in-browser EVM (Cancun).</span>`;
 }
 
 const operatorFor = (r) => ({ VCS: "verra", GOLD: "goldstandard", CAR: "car", ACR: "acr" })[r] ?? "car";
