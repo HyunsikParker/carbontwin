@@ -4,7 +4,7 @@ CarbonTwin looks for carbon credit projects that are listed in two registries an
 
 Live demo: https://hyunsikparker.github.io/carbontwin/
 
-Demo video (3 min 31 s, synthetic narration): https://hyunsikparker.github.io/carbontwin/media/carbontwin-demo.mp4
+Demo video (3 min 31 s, synthetic narration): https://youtu.be/Mjaue573Vp4 (also at https://hyunsikparker.github.io/carbontwin/media/carbontwin-demo.mp4)
 
 Built for the IEEE ClimateChain Global Hackathon 2026, track **Carbon Markets & Emissions Transparency**.
 
