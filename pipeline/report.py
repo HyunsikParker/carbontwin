@@ -14,7 +14,12 @@ from __future__ import annotations
 import gzip
 import json
 import re
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from adjudicate import record_text  # noqa: E402
+from verify import ground_facts  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data"
@@ -32,16 +37,13 @@ def listing(p: dict) -> dict:
     return out
 
 
-def _norm(text: str) -> str:
-    return re.sub(r"[^a-z0-9.]+", " ", str(text).lower())
-
-
 def checked_reason(reason: str, facts: list, a: dict, b: dict) -> tuple[str, bool]:
     """Keep the model's sentence only if every number in it appears in both records."""
-    text_a = _norm(json.dumps(a)) + " " + _norm(a.get("description", ""))
-    text_b = _norm(json.dumps(b)) + " " + _norm(b.get("description", ""))
-    numbers = re.findall(r"\d+(?:\.\d+)?", reason or "")
-    if reason and all(n in text_a and n in text_b for n in numbers):
+    number_pattern = r"\d+(?:\.\d+)?"
+    numbers_a = set(re.findall(number_pattern, json.dumps(a, ensure_ascii=False)))
+    numbers_b = set(re.findall(number_pattern, json.dumps(b, ensure_ascii=False)))
+    numbers = set(re.findall(number_pattern, reason or ""))
+    if reason and numbers <= numbers_a and numbers <= numbers_b:
         return reason, True
     shared = [f"{x['field'].lower()} ({x['value_a']})" for x in facts[:4]]
     return ("Both records share " + ", ".join(shared) + "." if shared else ""), False
@@ -102,16 +104,20 @@ def main() -> None:
             "listing_a": listing(projects[c["a"]]), "listing_b": listing(projects[c["b"]]),
         }
         e = evidence.get((c["a"], c["b"]))
+        confirmed = False
         if e:
+            cached_facts = e["grounded_facts"]
+            facts = ground_facts(cached_facts, record_text(projects[c["a"]]), record_text(projects[c["b"]]))
             item["second_pass"] = e["second_pass"]
-            item["shared_facts"] = e["grounded_facts"]
+            item["shared_facts"] = facts
             item["differences"] = e["differences"]
             item["reason"], item["reason_from_model"] = checked_reason(
-                e["reason"], e["grounded_facts"], projects[c["a"]], projects[c["b"]])
-            item["dropped_facts"] = e["dropped_facts"]
+                e["reason"], facts, projects[c["a"]], projects[c["b"]])
+            item["dropped_facts"] = e["dropped_facts"] + len(cached_facts) - len(facts)
+            confirmed = v["same_asset"] == "yes" and e["second_pass"] == "yes" and len(facts) >= 2
         conflict = name_conflict(item["listing_a"]["Project Name"], item["listing_b"]["Project Name"])
         item["name_conflict"] = conflict
-        if e and e["confirmed"] and not conflict:
+        if confirmed and not conflict:
             findings.append(item)
         elif v["same_asset"] in ("yes", "unclear"):
             review.append(item)

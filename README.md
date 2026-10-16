@@ -44,7 +44,7 @@ A shared vintage is a question for the registries, not proof of double counting.
 ```sh
 npm install
 npm run compile && npm test
-pip install -r requirements.txt && python3 -m unittest pipeline/test_pipeline.py
+pip install -r requirements.txt && python3 -m unittest discover -s pipeline -p 'test_*.py'
 sh pipeline/fetch_data.sh               # downloads the Berkeley database (CC BY 4.0)
 python3 pipeline/screen.py
 llama-server -m gemma-4-12b-it-qat-q4_0.gguf --jinja --reasoning off --port 8095 -a gemma-4-12b &

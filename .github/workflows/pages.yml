@@ -23,7 +23,7 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -r requirements.txt
-      - run: python -m unittest pipeline/test_pipeline.py
+      - run: python -m unittest discover -s pipeline -p 'test_*.py'
       - run: npm ci
       - run: npm run compile
       - run: npm test

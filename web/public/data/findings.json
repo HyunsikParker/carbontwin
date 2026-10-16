@@ -3169,11 +3169,6 @@
      "value_b": "Agriculture / Manure Methane Digester"
     },
     {
-     "field": "Methodology",
-     "value_a": "ARB Compliance Offset Protocol: Capturing and Destroying Methane from Manurech",
-     "value_b": "ARB Compliance Offset Protocol: Capturing and Destroying Methane from Manurech"
-    },
-    {
      "field": "Country / State",
      "value_a": "United States / NEW YORK",
      "value_b": "United States / NEW YORK"
@@ -3187,7 +3182,7 @@
    ],
    "reason": "Both listings describe a project named Synergy Biogas, LLC developed by 3Degrees Group, Inc. involving an Agriculture / Manure Methane Digester using the ARB Compliance Offset Protocol: Capturing and Destroying Methane from Manure Management Systems.",
    "reason_from_model": true,
-   "dropped_facts": 0,
+   "dropped_facts": 1,
    "name_conflict": false,
    "leaf": "0xfb7a07897f55f90ca119bfca78cf8966d15b3875ee07690b8fe9fc15f839bf9e",
    "proof": [
@@ -4257,11 +4252,6 @@
      "field": "Methodology",
      "value_a": "AMS-I.D. Grid connected renewable electricity generation",
      "value_b": "AMS-I.D. Grid connected renewable electricity generation"
-    },
-    {
-     "field": "Credits issued by vintage",
-     "value_a": "none",
-     "value_b": "none"
     }
    ],
    "differences": [
@@ -4271,7 +4261,7 @@
    ],
    "reason": "Both listings describe a Biomass based power project in India developed by Dee Development Engineers Pvt. Ltd. using the AMS-I.D. Grid connected renewable electricity generation methodology.",
    "reason_from_model": true,
-   "dropped_facts": 0,
+   "dropped_facts": 1,
    "name_conflict": false,
    "leaf": "0x39fa567cd2fb3a9618967fc57bc011ff19df090c758d5b665c429ee46773f16d",
    "proof": [
@@ -4334,11 +4324,6 @@
    "second_pass": "yes",
    "shared_facts": [
     {
-     "field": "Name",
-     "value_a": "Utilization of Biomass in Bricks Manufacturing By Ozone Envirotech Pvt. Ltd. (OE",
-     "value_b": "Utilization of Biomass in Bricks Manufacturing By Ozone Envirotech Pvt. Ltd. (OE"
-    },
-    {
      "field": "Developer",
      "value_a": "Ozone Envirotech Private Limited",
      "value_b": "Ozone Envirotech Private Limited"
@@ -4352,11 +4337,6 @@
      "field": "Scope / Type",
      "value_a": "Industrial & Commercial / Brick Manufacturing Emission Reductions",
      "value_b": "Industrial & Commercial / Brick Manufacturing Emission Reductions"
-    },
-    {
-     "field": "Methodology",
-     "value_a": "AMS-III.Z. Fuel switch, process improvement and energy efficiency in brick manuf",
-     "value_b": "AMS-III.Z. Fuel switch, process improvement and energy efficiency in brick manuf"
     }
    ],
    "differences": [
@@ -4365,7 +4345,7 @@
    ],
    "reason": "Both listings share the same Name, Developer, Country / State / Site, Scope / Type, and Methodology.",
    "reason_from_model": true,
-   "dropped_facts": 0,
+   "dropped_facts": 2,
    "name_conflict": false,
    "leaf": "0xd72736b5bfd26c759c0507df182b83072d4f9e5c76d4ea461d7bd325de7f7fd2",
    "proof": [
@@ -5283,11 +5263,6 @@
      "value_b": "Agriculture / Rice Emission Reductions"
     },
     {
-     "field": "Credits issued by vintage",
-     "value_a": "none",
-     "value_b": "none"
-    },
-    {
      "field": "Name",
      "value_a": "Improved agricultural practices for Rice cultivation in India",
      "value_b": "Improved Agricultural Practices for Rice Cultivation in India"
@@ -5300,7 +5275,7 @@
    ],
    "reason": "Both listings describe a project by Kosher Climate India Pvt Ltd. in India involving Agriculture / Rice Emission Reductions.",
    "reason_from_model": true,
-   "dropped_facts": 0,
+   "dropped_facts": 1,
    "name_conflict": false,
    "leaf": "0x645d9d4f75ec1dc8710092e213adbd5b7cf7146a4e09ff9d3bf10b1f878f8f0e",
    "proof": [
@@ -5856,11 +5831,6 @@
      "value_b": "AMS-I.C. Thermal energy production with or without electricity"
     },
     {
-     "field": "Credits issued by vintage",
-     "value_a": "none",
-     "value_b": "none"
-    },
-    {
      "field": "Developer",
      "value_a": "Farmgate Agro Milch Private Limited \"GSF\"",
      "value_b": "FARMGATE AGRO MILCH PRIVATE LIMITED"
@@ -5872,7 +5842,7 @@
    ],
    "reason": "Both listings describe a Biomass Renewable Energy project in India using the AMS-I.C. Thermal energy production methodology developed by Farmgate Agro Milch Private Limited.",
    "reason_from_model": true,
-   "dropped_facts": 0,
+   "dropped_facts": 1,
    "name_conflict": false,
    "leaf": "0xfd8f02e430737e2d048a68c5cee35f5a8f07cb48bd853b7ea3fc73d7c1c95cb5",
    "proof": [
@@ -5950,11 +5920,6 @@
      "value_b": "Household & Community / Cookstoves"
     },
     {
-     "field": "Credits issued by vintage",
-     "value_a": "none",
-     "value_b": "none"
-    },
-    {
      "field": "Developer",
      "value_a": "CARBON IMPACT CAPITAL PTE. LTD.",
      "value_b": "Carbon Impact Capital"
@@ -5967,7 +5932,7 @@
    ],
    "reason": "Both listings share the same Name, Country / State / Site, Scope / Type, and Developer.",
    "reason_from_model": true,
-   "dropped_facts": 0,
+   "dropped_facts": 1,
    "name_conflict": false,
    "leaf": "0x85bbb642ac7c204bd17c272bbe871f06f271cf3325e48cbc8fb1ca535f4d1a26",
    "proof": [

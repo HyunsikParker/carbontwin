@@ -51,13 +51,29 @@ def norm(s: str) -> str:
 
 
 def grounded(value: str, text: str) -> bool:
-    v, t = norm(value), norm(text)
-    if not v:
+    if not isinstance(value, str):
         return False
-    if v in t:
-        return True
-    words = [w for w in v.split() if len(w) > 2]
-    return bool(words) and sum(w in t.split() for w in words) / len(words) >= 0.8
+    v, t = norm(value), norm(text)
+    if not v or v in {"none", "null", "unknown", "n a", "not available"}:
+        return False
+    return f" {v} " in f" {t} "
+
+
+def ground_facts(facts: list, a_text: str, b_text: str) -> list[dict]:
+    """Keep distinct value pairs that occur as complete phrases in both sources."""
+    kept, seen = [], set()
+    for fact in facts:
+        if not isinstance(fact, dict) or not isinstance(fact.get("field"), str):
+            continue
+        a, b = fact.get("value_a"), fact.get("value_b")
+        if not grounded(a, a_text) or not grounded(b, b_text):
+            continue
+        pair = norm(a), norm(b)
+        if pair in seen:
+            continue
+        seen.add(pair)
+        kept.append(fact)
+    return kept
 
 
 def ask(api: str, prompt: str) -> dict:
@@ -104,8 +120,7 @@ def main() -> None:
                 break
             except Exception as exc:
                 r = {"same_asset": "unclear", "shared_facts": [], "differences": [], "reason": f"error: {exc}"[:200]}
-        kept = [f for f in r.get("shared_facts", [])
-                if grounded(f.get("value_a", ""), a_text) and grounded(f.get("value_b", ""), b_text)]
+        kept = ground_facts(r.get("shared_facts", []), a_text, b_text)
         dropped = len(r.get("shared_facts", [])) - len(kept)
         confirmed = v["same_asset"] == "yes" and r.get("same_asset") == "yes" and len(kept) >= 2
         return {"a": v["a"], "b": v["b"], "first_pass": v["same_asset"], "second_pass": r.get("same_asset"),

@@ -7,7 +7,7 @@
     "compile": "node contracts/compile.mjs",
     "dev": "vite",
     "build": "vite build",
-    "pipeline": "python3 pipeline/screen.py && python3 pipeline/adjudicate.py && python3 pipeline/report.py && node pipeline/anchor.mjs"
+    "pipeline": "python3 pipeline/screen.py && python3 pipeline/adjudicate.py && python3 pipeline/verify.py && python3 pipeline/report.py && node pipeline/anchor.mjs"
   },
   "license": "MIT",
   "type": "module",
